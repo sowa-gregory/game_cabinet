@@ -28,8 +28,11 @@ class GPIOButton:
 
 class PowerButton(GPIOButton):
     def on_long_press(self, button_id):
-        result = subprocess.run("killall emulationstation", shell=True)
-        print(result)
+        print("switching off")
+        sleep(2)
+        subprocess.run("killall emulationstation", shell=True)
+        subprocess.run("sudo shutdown -h now", shell=True)
+        
         
 button = PowerButton(3, 3000)
 
