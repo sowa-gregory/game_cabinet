@@ -2,12 +2,29 @@ import time
 import subprocess
 import RPi.GPIO as GPIO
 
+"""
+All pin numbers refers to physical pins (not BCM)
+
+* Power Button
+Switching on and off raspberry pi. 
+Power on hardware function of raspberry is assigned to PIN 5 and cannot be modified.
+PIN 5 (BCM 3) - power button gpio.
+PIN 6 - GND
+
+* Relay switch
+Switches 230v power for monitor and 12v power supplier.
+PIN 7 (BCM 4) - output gpio signal for relay
+PIN 4 - 5V
+PIN 9 - GND
+
+
+
+"""
 class GPIOButton:
 
     def __init__(self, button_id, long_press_millis=1000):
         self.__start_time = 0
         self.__long_press_millis = long_press_millis
-        GPIO.setmode(GPIO.BCM)
         GPIO.setup(button_id, GPIO.IN)
         GPIO.add_event_detect(button_id, GPIO.BOTH, callback=self.__on_button)
             
@@ -33,10 +50,17 @@ class PowerButton(GPIOButton):
         subprocess.run("killall emulationstation", shell=True)
         subprocess.run("sudo shutdown -h now", shell=True)
         
-        
-button = PowerButton(3, 3000)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(4, GPIO.OUT)
 
-while True:
-    time.sleep(1)
 
-GPIO.cleanup()
+#button = PowerButton(3, 3000)
+try:
+
+    while True:
+        GPIO.output(4, True)        
+        time.sleep(0.2)
+        GPIO.output(4, False)
+        time.sleep(0.5)        
+except KeyboardInterrupt:
+    GPIO.cleanup()
