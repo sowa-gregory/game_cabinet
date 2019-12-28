@@ -1,24 +1,51 @@
 import I2C_driver
 import datetime
+import cpuload
 import time
 
+def get_cpu_load()->int:
+    load = cpu.getlastload()
+    if load: return int(load['cpu'])
+    return 0
 
 def get_system_temperature()->str:
     with open("/sys/class/thermal/thermal_zone0/temp") as file:
-        return str(int(file.read())//100/10)
+        return str(int(file.read())//1000)
     
 def show_system_status():
-        time = datetime.datetime.now().strftime("%H:%M:%S")
-        lcd.lcd_display_string("Time: "+time,1)
-        temp = get_system_temperature()
-        lcd.lcd_display_string("Temp: "+temp,2)
+        cpu_load = get_cpu_load()
+        time_str = datetime.datetime.now().strftime("%H:%M:%S")
+        temp_str = get_system_temperature()
+
         
+        font_data=[
+        ## thermometer
+        [0b00100, 0b01010,  0b01010, 0b01110, 0b01110, 0b11111,  0b11111, 0b01110],
         
+  ## clock      
+  [0b01110,
+        0b10001,
+        0b10001,
+        0b10101,
+        0b10101,
+        0b11001,
+        0b10001,
+        0b01110],
+## celsius
+ [0b11000,  0b11000, 0b00011,   0b00100,  0b00100,  0b00100,  0b00100,  0b00011]
+  ,
+## cpu
+  [0x0A, 0x1F,  0x0E,  0x1F,  0x1F,  0x0E,  0x1F,  0x0A]
+  ]
+        lcd.lcd_load_custom_chars(font_data)
+        lcd.lcd_display_string(chr(1)+" "+time_str+"  "+chr(0)+temp_str+chr(2),1)
+        
+        lcd.lcd_display_string(chr(3)+" "+str(cpu_load)+"%",2)
+        
+                
 
 lcd = I2C_driver.lcd()
-# test 2
-
-
+cpu = cpuload.CpuLoad()
 show_system_status()
 
 try:
