@@ -3,14 +3,15 @@ import datetime
 import time
 
 
-def get_system_temperature()->float:
+def get_system_temperature()->str:
     with open("/sys/class/thermal/thermal_zone0/temp") as file:
-        return float(file.read())/100
+        return str(int(file.read())//100/10)
     
 def show_system_status():
         time = datetime.datetime.now().strftime("%H:%M:%S")
         lcd.lcd_display_string("Time: "+time,1)
-        print( get_system_temperature())
+        temp = get_system_temperature()
+        lcd.lcd_display_string("Temp: "+temp,2)
         
         
 

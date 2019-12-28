@@ -3,16 +3,29 @@ import datetime
 import time
 
 
-def get_system_temperature()->float:
+def get_system_temperature()->str:
     with open("/sys/class/thermal/thermal_zone0/temp") as file:
-        return float(file.read())/100
+        return str(int(file.read())//100/10)
     
 def show_system_status():
         time = datetime.datetime.now().strftime("%H:%M:%S")
         lcd.lcd_display_string("Time: "+time,1)
-        #print( get_system_temperature())
+        temp = get_system_temperature()
+        lcd.lcd_display_string("Temp: "+temp,2)
         
+        font_data=[[
+ 0b00100,
+        0b01010,
+        0b01010,
+        0b01110,
+        0b01110,
+        0b11111,
+        0b11111,
+        0b01110]]
+        lcd.lcd_load_custom_chars(font_data)
+        lcd.lcd_display_string(chr(0)+"Temp: "+temp,2)
         
+                
 
 lcd = I2C_driver.lcd()
 # test 2
