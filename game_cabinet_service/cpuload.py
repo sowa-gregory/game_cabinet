@@ -60,10 +60,10 @@ class CpuLoad(threading.Thread):
             return cpu_infos
     
     def timewait(self,secs:int):
-        for i in range(secs*2):
+        for i in range(secs):
             if not self._running:
                 raise ThreadStop()
-            time.sleep(0.5)
+            time.sleep(1)
         
     def _getcpuload(self):
         '''
