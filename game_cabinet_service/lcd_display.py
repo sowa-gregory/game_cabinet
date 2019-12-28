@@ -5,6 +5,25 @@ import signal
 import time
 import RPi.GPIO as GPIO
 
+
+class Relay:
+  _initialized = False
+  
+  def _initialize():
+    if not Relay._initialized:
+      GPIO.setmode(GPIO.BCM)
+      GPIO.setup(4, GPIO.OUT)
+      Relay._initialized = True
+
+  def __init__(self):
+    Relay._initialize()
+    
+  def switch(self, state:bool):
+    Relay._initialize()
+    GPIO.output(4, not state)
+         
+    
+
 def check_running_process():
     pass
 
@@ -12,6 +31,8 @@ def get_cpu_load()->int:
     load = cpu.getlastload()
     if load: return int(load['cpu'])
     return 0
+
+
 
 def get_system_temperature()->str:
     with open("/sys/class/thermal/thermal_zone0/temp") as file:
@@ -51,6 +72,8 @@ def do_exit():
     lcd.lcd_clear()
     lcd.backlight(0)
     cpu.stop()
+    print("switch off relay")
+    Relay().switch(False)
     exit()
       
 def on_sigkill(signumber, frame):  
@@ -58,16 +81,13 @@ def on_sigkill(signumber, frame):
   do_exit()
 
 lcd = I2C_driver.lcd()
+
 signal.signal(signal.SIGTERM, on_sigkill)
+print("signal set")
 cpu = cpuload.CpuLoad()
+Relay().switch(True)
 
-lcd.lcd_display_string("Czas gry minal",1)
-
-lcd.lcd_display_string("Wrzuc monete...",2)
-time.sleep(30)
 lcd.lcd_clear()
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(4, GPIO.OUT)
 GPIO.output(4, False)
 show_system_status()
 
