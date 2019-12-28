@@ -52,15 +52,16 @@ class PowerButton(GPIOButton):
         
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(4, GPIO.OUT)
+GPIO.output(4, False)        
 
 
 #button = PowerButton(3, 3000)
 try:
 
     while True:
-        GPIO.output(4, True)        
-        time.sleep(0.2)
-        GPIO.output(4, False)
-        time.sleep(0.5)        
+        time.sleep(1)        
+
 except KeyboardInterrupt:
+    print()
+    print("gpio cleanup")
     GPIO.cleanup()

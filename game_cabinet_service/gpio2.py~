@@ -5,12 +5,18 @@ import RPi.GPIO as GPIO
 """
 All pin numbers refers to physical pins (not BCM)
 
-Power Button
+* Power Button
 Switching on and off raspberry pi. 
-Power on hardware function of raspberry is assigned to PIN 5 and 6 and cannot be modified.
-PIN 5, PIN 6
+Power on hardware function of raspberry is assigned to PIN 5 and cannot be modified.
+PIN 5 (BCM 3) - power button gpio.
+PIN 6 - GND
 
- 
+* Relay switch
+Switches 230v power for monitor and 12v power supplier.
+PIN 7 (BCM 4) - output gpio signal for relay
+PIN 4 - 5V
+PIN 9 - GND
+
 
 
 """
@@ -46,15 +52,16 @@ class PowerButton(GPIOButton):
         
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(4, GPIO.OUT)
+GPIO.output(4, False)        
 
 
-#button = PowerButton(3, 3000)
+button = PowerButton(3, 3000)
 try:
 
     while True:
-        GPIO.output(4, True)        
-        time.sleep(0.2)
-        GPIO.output(4, False)
-        time.sleep(0.5)        
+        time.sleep(1)        
+
 except KeyboardInterrupt:
+    print()
+    print("gpio cleanup")
     GPIO.cleanup()
