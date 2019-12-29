@@ -84,23 +84,27 @@ def convert_game(game: dict):
                 if res.returncode!=0:
                     shutil.move(game["path"], game["path"]+".problem")
                     return
-                out_name = "conv/"+base_name+".lha"
+                out_name = OUTPUT_DIR+"/"+base_name+".lha"
                 if os.path.isfile(out_name):
                     print("confilict of output archive names:"+out_name)
                     shutil.move( game["path"], game["path"]+".duplicate")
                 else:
-                    shutil.move( "/tmp/out.lha", "conv/"+base_name+".lha")
+                    shutil.move( "/tmp/out.lha", OUTPUT_DIR+"/"+base_name+".lha")
                     shutil.move( game["path"], game["path"]+".done")                
             except InvalidContentException as err:
                 print("!!!!!!!!!!!!!",err)
                 shutil.move( game["path"], "roms_problems")
 
-files = [{"name": file.name[:file.name.rfind(".")], "path":file.path}
-         for file in os.scandir("newroms") if is_zip_file(file)]
+def convert_all():
+    files = [{"name": file.name[:file.name.rfind(".")], "path":file.path}
+             for file in os.scandir(INPUT_DIR+"/") if is_zip_file(file)]
+    total = len(files)
+    count = 1
+    for game in files:
+        print("Processing:"+str(count)+"/"+str(total)+"  "+game["name"])
+        count=count+1
+        convert_game(game)
 
-total = len(files)
-count = 1
-for game in files:
-    print("Processing:"+str(count)+"/"+str(total)+"  "+game["name"])
-    count=count+1
-    convert_game(game)
+INPUT_DIR = "roms"
+OUTPUT_DIR = "roms"
+convert_all()
