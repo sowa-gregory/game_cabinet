@@ -39,49 +39,17 @@ If conversion is about to generate duplicate archive file, operation is aborted 
 
 """
 
-def is_zip_file(file) -> bool:
-    return file.is_file() and file.name.endswith(".zip")
+def is_lha_file(file) -> bool:
+    return file.is_file() and file.name.endswith(".lha")
 
 
-def is_root_level_name(name: str) -> bool:
-    if((name.endswith("/") and name.count("/") == 1) or name.count("/") == 0):
-        return True
-    return False
-
-
-class InvalidContentException(Exception):
-    pass
-
-class DuplicateContentException(Exception):
-    pass
-    
-def check_content(game: dict, zip_file: zipfile.ZipFile) -> str:
-    content = [name for name in zip_file.namelist()
-               if is_root_level_name(name)]
-
-    if len(content) != 2:
-        raise DuplicateContentException()
-    
-    if content[0].endswith("/"):
-        basename=content[0][:-1] 
-    else:
-        basename=content[1][:-1]
-
-    if not basename+".info" in content:
-        print("!!!")
-        raise InvalidContentException("invalid content")
-        
-    return basename             
-    
 
 
 def convert_game(game: dict):
     
     with tempfile.TemporaryDirectory() as temp_dir:
-        with zipfile.ZipFile(game["path"], "r") as zip_file:
-            try:            
-                base_name=check_content(game, zip_file)
-                zip_file.extractall(temp_dir)
+            
+                res = subprocess.run("lha x "+game["path"], shell=True, cwd=temp_dir)            
                 
                 res = subprocess.run("lha a /tmp/out.lha "+base_name+"/* "+base_name+".info", shell=True, cwd=temp_dir)            
                 if res.returncode!=0:
@@ -94,15 +62,10 @@ def convert_game(game: dict):
                 else:
                     shutil.move( "/tmp/out.lha", OUTPUT_DIR+"/"+base_name+".lha")
                     shutil.move( game["path"], game["path"]+".done")                
-            except InvalidContentException as err:
-                print("!!!!!!!!!!!!!",err)
-                shutil.move( game["path"], "roms_problems")
-            except DuplicateContentException as err:
-                shutil.move( game["path"], "roms_invalid")
-                
+
 def convert_all():
     files = [{"name": file.name[:file.name.rfind(".")], "path":file.path}
-             for file in os.scandir(INPUT_DIR+"/") if is_zip_file(file)]
+             for file in os.scandir(INPUT_DIR+"/") if is_lha_file(file)]
     total = len(files)
     count = 1
     for game in files:
@@ -111,5 +74,5 @@ def convert_all():
         convert_game(game)
 
 INPUT_DIR = "roms"
-OUTPUT_DIR = "roms_done"
+OUTPUT_DIR = "fix_roms"
 convert_all()
