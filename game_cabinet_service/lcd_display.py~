@@ -1,4 +1,5 @@
 import I2C_driver
+import subprocess
 import datetime
 import cpuload
 import signal
@@ -73,22 +74,46 @@ def do_exit():
     lcd.backlight(0)
     cpu.stop()
     print("switch off relay")
-    GPIO.output(4, True)
+    Relay().switch(False)
     exit()
       
 def on_sigkill(signumber, frame):  
   print("kill")                
   do_exit()
 
+
+def wait_time_sync():
+    pos=0
+    lcd.lcd_display_string("wait time sync..",1)
+    
+    while True:
+      lcd.lcd_display_string_pos(".", 2, pos)
+      if pos<16: pos=pos+1
+      res=subprocess.run("/usr/bin/chronyc tracking", shell=True, capture_output=True)
+      for line in res.stdout.split(b"\n"):
+        line = line.decode("ascii")
+        line = " ".join(line.split())
+        if "Leap status : Normal" in line:
+           return
+      time.sleep(1)
+    
+    
+
 lcd = I2C_driver.lcd()
 
 signal.signal(signal.SIGTERM, on_sigkill)
 print("signal set")
+
+# wait for timed synchronization
+lcd.lcd_clear()
+wait_time_sync()
 cpu = cpuload.CpuLoad()
-Relay().switch(True)
+#Relay().switch(True)
 
 lcd.lcd_clear()
-GPIO.output(4, False)
+# wait for timed synchronization
+
+
 show_system_status()
 
 
