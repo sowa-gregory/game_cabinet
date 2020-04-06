@@ -67,7 +67,7 @@ def show_system_status():
         lcd.lcd_load_custom_chars(font_data)
         lcd.lcd_display_string(chr(1)+" "+time_str+"  "+chr(0)+temp_str+chr(2),1)
         
-        lcd.lcd_display_string(chr(3)+" "+str(cpu_load)+"%",2)
+        lcd.lcd_display_string(chr(3)+" "+str(cpu_load)+"% ",2)
   
 def do_exit():
     lcd.lcd_clear()
@@ -108,12 +108,9 @@ print("signal set")
 lcd.lcd_clear()
 wait_time_sync()
 cpu = cpuload.CpuLoad()
-#Relay().switch(True)
+Relay().switch(False)
 
 lcd.lcd_clear()
-# wait for timed synchronization
-
-
 show_system_status()
 
 

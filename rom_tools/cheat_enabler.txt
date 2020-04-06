@@ -1,0 +1,2 @@
+after loading cheat in retroarch cheat menu - cheat configuration file is
+created in /opt/retropie/configs/all/retroach/cheats/Snes9x... directory

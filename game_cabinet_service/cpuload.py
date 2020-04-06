@@ -99,8 +99,7 @@ class CpuLoad(threading.Thread):
         try:
             while True:
                 load = self._getcpuload()
-                with self._lock:
-                    self._lastload = load
+                with self._lock: self._lastload = load
                 self.timewait(self.sleeptime)
         except ThreadStop:
             print("thread exit")
