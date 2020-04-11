@@ -49,24 +49,32 @@ bool has_user_group(const string &group_name) {
     return false;
 }
 
-struct input_device
-{
-   string device_path;
-   string device_name;
+struct InputDeviceList {
+    string device_path;
+    string device_name;
 };
 
-//vector<struct input_device> scan_devices(void);
+class InputDevice {
+  private:
+    vector<InputDeviceList> devices_;
+  public:
+    vector<InputDeviceList> ScanDevices(void);
+    void PrintDevices();
+    string GetDeviceByName(const string &name);
+};
 
 
-vector<input_device> scan_devices(void) {
-    dirent **pNameList;
+#define INPUT_DEV_PATH "/dev/input"
 
-    int iNDev = scandir("/dev/input", &pNameList, [](auto ent)-> int{return ent->d_type==DT_CHR;}, alphasort);
+vector<InputDeviceList> InputDevice::ScanDevices(void) {
+    dirent **name_list;
 
-	vector<input_device> devices;
-    for( int iIndex=0; iIndex<iNDev; iIndex++) {
+    int num = scandir(INPUT_DEV_PATH, &name_list, [](auto ent)-> int{return ent->d_type==DT_CHR;}, alphasort);
+
+    devices_.clear();
+    for( int i=0; i<num; i++) {
         char name[256];
-        auto path = string("/dev/input/")+pNameList[iIndex]->d_name;
+        auto path = string(INPUT_DEV_PATH)+"/"+name_list[i]->d_name;
         auto fd = open(path.c_str(), O_RDONLY);
 
         if(fd<0) {
@@ -76,30 +84,45 @@ vector<input_device> scan_devices(void) {
         }
         ioctl(fd, EVIOCGNAME(sizeof(name)), name);
         close(fd);
-        devices.push_back(input_device{path, name});
+        devices_.push_back(InputDeviceList{path, name});
     }
-    return devices;
+    return devices_;
 }
 
-void print_devices(vector<input_device> devices)
-{
-	for( auto &dev : devices)
-		cout << dev.device_path << " " << dev.device_name << endl;
+void InputDevice::PrintDevices() {
+    for( auto &dev : devices_)
+        cout << dev.device_path << " " << dev.device_name << endl;
+}
+
+string InputDevice::GetDeviceByName(const string &name) {
+    for( auto &dev : devices_)
+        if( dev.device_name.compare(name)==0) return dev.device_path;
+    throw "get_device_by_name:\"" + name + "\" not found";
 }
 
 #define INPUT_GROUP "input"
 
-int main(void) {
-    auto res = has_user_group(INPUT_GROUP);
-    if(!res) {
+
+void joy() {
+    if(!has_user_group(INPUT_GROUP)) {
         auto user_name = get_user_name();
         cerr << "User:" << user_name<< " is not in input group!!!" << endl;
         cerr << "use command: sudo usergroup -a -G " << INPUT_GROUP << " " << user_name << endl;
         exit(-1);
     }
-    cout << res << endl;
 
-    auto devices = scan_devices();
-	print_devices(devices);	
+    InputDevice input_device;
+
+    auto devices = input_device.ScanDevices();
+    input_device.PrintDevices();
+    cout << input_device.GetDeviceByName( "Sleep Buttona");
+
+}
+int main(void) {
+    try {
+        joy();
+    } catch( string  exc ) {
+        cerr << "Exception:"+exc << endl;
+    }
     return 0;
 }

@@ -11,14 +11,13 @@
 
 using namespace std;
 
-string get_user_name()
-{
+string get_user_name() {
     passwd *pw = getpwuid(getuid());
     if(pw==NULL) {
         perror("getpwuid error");
         exit(-1);
     }
-	return string(pw->pw_name);
+    return string(pw->pw_name);
 }
 
 vector<string> get_user_groups() {
@@ -44,50 +43,94 @@ vector<string> get_user_groups() {
 }
 
 bool has_user_group(const string &group_name) {
-    for( auto &grp : get_user_groups())
-    {
-    	cout << grp << endl;
+    for( auto &grp : get_user_groups()) {
         if(grp.compare(group_name)==0) return true;
-        }
+    }
     return false;
 }
 
-void scan_devices(void) {
+struct input_device_list
+{
+   string device_path;
+   string device_name;
+};
+
+class InputDevice
+{
+	private:
+		vector<input_device_list> devices_;
+	public:
+		vector<input_device_list> scan_devices(void);
+	void print_devices();
+	string get_device_by_name(const string &name);
+};
+
+
+#define INPUT_DEV_PATH "/dev/input"
+
+vector<input_device_list> InputDevice::scan_devices(void) {
     dirent **pNameList;
 
-//    int iNDev = scandir("/dev/input", &pNameList, is_event_device, alphasort);
-   int iNDev = scandir("/dev/input", &pNameList, [](const dirent *entry)->int {return entry->d_type==DT_CHR;}, alphasort);
+    int iNDev = scandir(INPUT_DEV_PATH, &pNameList, [](auto ent)-> int{return ent->d_type==DT_CHR;}, alphasort);
 
-    cout << iNDev << endl;
+	devices_.clear();
     for( int iIndex=0; iIndex<iNDev; iIndex++) {
         char name[256];
-        auto strDevice = string("/dev/input/")+pNameList[iIndex]->d_name;
-        auto fd = open(strDevice.c_str(), O_RDONLY);
+        auto path = string(INPUT_DEV_PATH)+"/"+pNameList[iIndex]->d_name;
+        auto fd = open(path.c_str(), O_RDONLY);
 
         if(fd<0) {
-            string msg = "cannot open device:" +strDevice;
+            string msg = "cannot open device:" +path;
             perror(msg.c_str());
             exit(-1);
         }
         ioctl(fd, EVIOCGNAME(sizeof(name)), name);
         close(fd);
-        cout << strDevice << "  " << name << endl;
+        devices_.push_back(input_device_list{path, name});
     }
+    return devices_;
+}
+
+void InputDevice::print_devices()
+{
+	for( auto &dev : devices_)
+		cout << dev.device_path << " " << dev.device_name << endl;
+}
+
+string InputDevice::get_device_by_name(const string &name)
+{
+	for( auto &dev : devices_)
+		if( dev.device_name.compare(name)==0) return dev.device_path;
+	throw "get_device_by_name:\"" + name + "\" not found";
 }
 
 #define INPUT_GROUP "input"
 
-int main(void) {
-    auto res = has_user_group(INPUT_GROUP);
-	if(!res)
-	{
-		auto user_name = get_user_name();
-		cerr << "User:" << user_name<< " is not in input group!!!" << endl;
-		cerr << "use command: sudo usergroup -a -G " << INPUT_GROUP << " " << user_name << endl;
-		exit(-1);
-	}
-    cout << res << endl;
 
-    scan_devices();
+void joy()
+{
+    if(!has_user_group(INPUT_GROUP)) {
+        auto user_name = get_user_name();
+        cerr << "User:" << user_name<< " is not in input group!!!" << endl;
+        cerr << "use command: sudo usergroup -a -G " << INPUT_GROUP << " " << user_name << endl;
+        exit(-1);
+    }
+
+	InputDevice input_device;
+	
+    auto devices = input_device.scan_devices();
+	input_device.print_devices();	
+	cout << input_device.get_device_by_name( "Sleep Buttona");
+	
+}
+int main(void) {
+try
+{
+	joy();
+}
+catch( string  exc )
+{
+	cerr << "Exception:"+exc << endl;	
+}
     return 0;
 }
