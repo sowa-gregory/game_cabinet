@@ -11,13 +11,14 @@
 
 using namespace std;
 
-string get_user_name() {
+string get_user_name()
+{
     passwd *pw = getpwuid(getuid());
     if(pw==NULL) {
         perror("getpwuid error");
         exit(-1);
     }
-    return string(pw->pw_name);
+	return string(pw->pw_name);
 }
 
 vector<string> get_user_groups() {
@@ -43,63 +44,50 @@ vector<string> get_user_groups() {
 }
 
 bool has_user_group(const string &group_name) {
-    for( auto &grp : get_user_groups()) {
+    for( auto &grp : get_user_groups())
+    {
+    	cout << grp << endl;
         if(grp.compare(group_name)==0) return true;
-    }
+        }
     return false;
 }
 
-struct input_device
-{
-   string device_path;
-   string device_name;
-};
-
-//vector<struct input_device> scan_devices(void);
-
-
-vector<input_device> scan_devices(void) {
+void scan_devices(void) {
     dirent **pNameList;
 
-    int iNDev = scandir("/dev/input", &pNameList, [](auto ent)-> int{return ent->d_type==DT_CHR;}, alphasort);
+//    int iNDev = scandir("/dev/input", &pNameList, is_event_device, alphasort);
+   int iNDev = scandir("/dev/input", &pNameList, [](const dirent *entry)->int {return entry->d_type==DT_CHR;}, alphasort);
 
-	vector<input_device> devices;
+    cout << iNDev << endl;
     for( int iIndex=0; iIndex<iNDev; iIndex++) {
         char name[256];
-        auto path = string("/dev/input/")+pNameList[iIndex]->d_name;
-        auto fd = open(path.c_str(), O_RDONLY);
+        auto strDevice = string("/dev/input/")+pNameList[iIndex]->d_name;
+        auto fd = open(strDevice.c_str(), O_RDONLY);
 
         if(fd<0) {
-            string msg = "cannot open device:" +path;
+            string msg = "cannot open device:" +strDevice;
             perror(msg.c_str());
             exit(-1);
         }
         ioctl(fd, EVIOCGNAME(sizeof(name)), name);
         close(fd);
-        devices.push_back(input_device{path, name});
+        cout << strDevice << "  " << name << endl;
     }
-    return devices;
-}
-
-void print_devices(vector<input_device> devices)
-{
-	for( auto &dev : devices)
-		cout << dev.device_path << " " << dev.device_name << endl;
 }
 
 #define INPUT_GROUP "input"
 
 int main(void) {
     auto res = has_user_group(INPUT_GROUP);
-    if(!res) {
-        auto user_name = get_user_name();
-        cerr << "User:" << user_name<< " is not in input group!!!" << endl;
-        cerr << "use command: sudo usergroup -a -G " << INPUT_GROUP << " " << user_name << endl;
-        exit(-1);
-    }
+	if(!res)
+	{
+		auto user_name = get_user_name();
+		cerr << "User:" << user_name<< " is not in input group!!!" << endl;
+		cerr << "use command: sudo usergroup -a -G " << INPUT_GROUP << " " << user_name << endl;
+		exit(-1);
+	}
     cout << res << endl;
 
-    auto devices = scan_devices();
-	print_devices(devices);	
+    scan_devices();
     return 0;
 }
