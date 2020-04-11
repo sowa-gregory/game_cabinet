@@ -1,3 +1,5 @@
+#pragma once
+
 #include <dirent.h>
 #include <string>
 #include <vector>
@@ -15,7 +17,7 @@ class InputDevice {
     static void FreeRes(int num, dirent **name_list);
   public:
     vector<InputDeviceList> ScanDevices(void);
-    void PrintDevices();
-    string GetDeviceByName(const string &name);
+    void PrintDevices() const;
+    string GetDeviceByName(const string &name) const;
 };
 

@@ -27,7 +27,7 @@ vector<InputDeviceList> InputDevice::ScanDevices(void) {
         auto fd = open(path.c_str(), O_RDONLY);
 
         if(fd<0) {
-            FreeRes(num, name_list);
+            InputDevice::FreeRes(num, name_list);
             throw "cannot open device:" +path;
         }
         ioctl(fd, EVIOCGNAME(sizeof(name)), name);
@@ -38,12 +38,12 @@ vector<InputDeviceList> InputDevice::ScanDevices(void) {
     return devices_;
 }
 
-void InputDevice::PrintDevices() {
+void InputDevice::PrintDevices() const {
     for( auto &dev : devices_)
         cout << dev.device_path << " " << dev.device_name << endl;
 }
 
-string InputDevice::GetDeviceByName(const string &name) {
+string InputDevice::GetDeviceByName(const string &name) const {
     for( auto &dev : devices_)
         if( dev.device_name.compare(name)==0) return dev.device_path;
     throw "get_device_by_name:\"" + name + "\" not found";
