@@ -114,10 +114,6 @@ string InputDevice::GetDeviceByName(const string &name) {
 
 
 void joy() {
-    for(int i=0; i<10000; i++) {
-        auto a = get_user_groups();
-    }
-
     if(!has_user_group(INPUT_GROUP)) {
         auto user_name = get_user_name();
         cerr << "User:" << user_name<< " is not in input group!!!" << endl;
