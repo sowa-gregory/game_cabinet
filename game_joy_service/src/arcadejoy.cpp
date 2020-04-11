@@ -124,7 +124,7 @@ void joy() {
 
     auto devices = input_device.ScanDevices();
     input_device.PrintDevices();
-    cout << input_device.GetDeviceByName( "Sleep Button");
+    cout << input_device.GetDeviceByName( "Sleep Button") << endl;
 
 }
 int main(void) {
