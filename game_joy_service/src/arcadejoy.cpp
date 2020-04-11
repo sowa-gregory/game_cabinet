@@ -30,15 +30,19 @@ vector<string> get_user_groups() {
     int ngroups=0; // must be initialized to 0 to get number of groups
     getgrouplist(pw->pw_name, pw->pw_gid, NULL, &ngroups);
 
-    __gid_t groups[ngroups];
+    auto groups = new __gid_t[ngroups];
     getgrouplist(pw->pw_name, pw->pw_gid, groups, &ngroups);
 
     vector<string> user_groups;
     for( int i=0; i<ngroups; i++) {
         auto gr = getgrgid(groups[i]);
-        if(gr==NULL) perror("getgrgid error");
+        if(gr==NULL) {
+            delete []groups;
+            throw "getgrgid error";
+        }
         user_groups.push_back(gr->gr_name);
     }
+    delete []groups;
     return user_groups;
 }
 
@@ -57,6 +61,7 @@ struct InputDeviceList {
 class InputDevice {
   private:
     vector<InputDeviceList> devices_;
+    static void FreeRes(int num, dirent **name_list);
   public:
     vector<InputDeviceList> ScanDevices(void);
     void PrintDevices();
@@ -65,6 +70,11 @@ class InputDevice {
 
 
 #define INPUT_DEV_PATH "/dev/input"
+
+void InputDevice::FreeRes( int num, dirent **name_list ) {
+    for(int i=0; i<num; i++) free(name_list[i]);
+    free(name_list);
+}
 
 vector<InputDeviceList> InputDevice::ScanDevices(void) {
     dirent **name_list;
@@ -78,14 +88,14 @@ vector<InputDeviceList> InputDevice::ScanDevices(void) {
         auto fd = open(path.c_str(), O_RDONLY);
 
         if(fd<0) {
-            string msg = "cannot open device:" +path;
-            perror(msg.c_str());
-            exit(-1);
+            FreeRes(num, name_list);
+            throw "cannot open device:" +path;
         }
         ioctl(fd, EVIOCGNAME(sizeof(name)), name);
         close(fd);
         devices_.push_back(InputDeviceList{path, name});
     }
+    FreeRes(num, name_list);
     return devices_;
 }
 
@@ -104,18 +114,21 @@ string InputDevice::GetDeviceByName(const string &name) {
 
 
 void joy() {
+    for(int i=0; i<10000; i++) {
+        auto a = get_user_groups();
+    }
+
     if(!has_user_group(INPUT_GROUP)) {
         auto user_name = get_user_name();
         cerr << "User:" << user_name<< " is not in input group!!!" << endl;
         cerr << "use command: sudo usergroup -a -G " << INPUT_GROUP << " " << user_name << endl;
         exit(-1);
     }
-
     InputDevice input_device;
 
     auto devices = input_device.ScanDevices();
     input_device.PrintDevices();
-    cout << input_device.GetDeviceByName( "Sleep Buttona");
+    cout << input_device.GetDeviceByName( "Sleep Button");
 
 }
 int main(void) {
