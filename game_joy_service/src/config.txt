@@ -1,0 +1,9 @@
+Change group ownership of uinput device.
+
+
+create a new file name: /etc/udev/rules.d/99-input.rules
+Insert the following in the code
+KERNEL==”uinput”, GROUP=”uinput”, MODE:=”0660″
+Machine reboot
+Verify settings by following command:
+ls -l /dev/uinput
