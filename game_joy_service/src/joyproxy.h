@@ -17,5 +17,5 @@ class JoyProxy
   public:
   	JoyProxy(vector<string> input_devs);
     ~JoyProxy();
-	
+	void start();	
 };
