@@ -22,16 +22,16 @@ void joy() {
     }
     InputDevice input_device;
 
-  	input_device.ScanDevices();
-	cout <<  "Detecting input devices..." << endl << blue;
+    input_device.ScanDevices();
+    cout <<  "Detecting input devices..." << endl << blue;
     input_device.PrintDevices();
 
 
-	cout << def << "Looking for DragonRise joysticks..." << endl;
+    cout << def << "Looking for DragonRise joysticks..." << endl;
     vector<string> devices = input_device.GetDevicesByName( "DragonRise");
-    
-	auto joy_proxy = JoyProxy(devices);    
-	joy_proxy.start();
+
+    auto joy_proxy = JoyProxy(devices);
+    joy_proxy.start();
 }
 int main(void) {
     try {

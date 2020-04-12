@@ -44,12 +44,11 @@ void InputDevice::PrintDevices() const {
         cout << dev.device_path << " " << dev.device_name << endl;
 }
 
-vector<string> InputDevice::GetDevicesByName( const string &name ) const
-{
-	vector<string> match_devs;
+vector<string> InputDevice::GetDevicesByName( const string &name ) const {
+    vector<string> match_devs;
     for( auto &dev : devices_)
         if( dev.device_name.find(name)!=string::npos) match_devs.push_back(dev.device_path);
-	return match_devs;
+    return match_devs;
 }
 
 string InputDevice::GetSingleDeviceByName(const string &name) const {

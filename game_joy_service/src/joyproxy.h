@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 #include <stdio.h>
 #include <string>
@@ -6,16 +6,15 @@
 
 using namespace std;
 
-class JoyProxy
-{
+class JoyProxy {
 
   private:
-  int input_fd_len_;
-  int *input_fd_;
-  	void OpenInputDevs(vector<string> input_devs);
-  	
+    int input_fd_len_;
+    int *input_fd_;
+    void OpenInputDevs(vector<string> input_devs);
+
   public:
-  	JoyProxy(vector<string> input_devs);
+    JoyProxy(vector<string> input_devs);
     ~JoyProxy();
-	void start();	
+    void start();
 };

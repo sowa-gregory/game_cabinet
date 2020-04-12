@@ -19,6 +19,6 @@ class InputDevice {
     vector<InputDeviceList> ScanDevices(void);
     void PrintDevices() const;
     string GetSingleDeviceByName(const string &name) const;
-	vector<string> GetDevicesByName(const string &name) const;
+    vector<string> GetDevicesByName(const string &name) const;
 };
 
