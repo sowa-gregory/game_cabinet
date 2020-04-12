@@ -1,0 +1,3 @@
+automatic start of scripts on emulator launch
+
+github.com/retropie/retropie-setup/wiki/runcommand

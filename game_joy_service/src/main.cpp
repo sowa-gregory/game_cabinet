@@ -1,9 +1,12 @@
 #include <iostream>
 #include <string>
+#include <thread>
+#include <chrono>
 #include "inputdevice.h"
 #include "usergroups.h"
 #include "joyproxy.h"
 #include "colormod.h"
+#include "process.h"
 
 using namespace std;
 
@@ -26,7 +29,6 @@ void joy() {
     cout <<  "Detecting input devices..." << endl << blue;
     input_device.PrintDevices();
 
-
     cout << def << "Looking for DragonRise joysticks..." << endl;
     vector<string> devices = input_device.GetDevicesByName( "DragonRise");
 
@@ -34,7 +36,14 @@ void joy() {
     joy_proxy.start();
 }
 int main(void) {
+	
+	
     try {
+	for(int i=0;i<1000;i++)	
+	{cout << Process::FindById(3631) << endl;
+	this_thread::sleep_for(chrono::milliseconds(500));
+	}
+	exit(-1);
         joy();
     } catch( string  exc ) {
         cerr << "Exception:"+exc << endl;

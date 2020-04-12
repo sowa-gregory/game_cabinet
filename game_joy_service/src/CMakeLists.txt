@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.7)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDADRD_REQUIRED ON)
 project(JoyService)
 
-add_executable(joyservice main.cpp inputdevice.cpp usergroups.cpp joyproxy.cpp)
+add_executable(joyservice main.cpp inputdevice.cpp usergroups.cpp joyproxy.cpp process.cpp)
 ADD_CUSTOM_TARGET(debug
   COMMAND ${CMAKE_COMMAND} -DCMAKE_BUILD_TYPE=Debug ${CMAKE_SOURCE_DIR}
   COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
