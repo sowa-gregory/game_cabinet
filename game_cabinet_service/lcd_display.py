@@ -119,7 +119,7 @@ print("signal set")
 lcd.lcd_clear()
 wait_time_sync()
 cpu = cpuload.CpuLoad()
-#Relay().switch(True)
+Relay().switch(True)
 
 lcd.lcd_clear()
 show_system_status()

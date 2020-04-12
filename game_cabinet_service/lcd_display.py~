@@ -28,10 +28,16 @@ class Relay:
 def check_running_process():
     pass
 
+# gets load of all cpu cores sorted from largest to lowest
 def get_cpu_load()->int:
-    load = cpu.getlastload()
-    if load: return int(load['cpu'])
-    return 0
+    load_data = cpu.getlastload()
+    if load_data:
+        load=[]
+        for cpu_id in range(0,4):
+             load.append(int(load_data['cpu'+str(cpu_id)]))
+        load.sort(reverse=True) 
+        return (load)
+    return None
 
 
 
@@ -65,10 +71,15 @@ def show_system_status():
   [0x0A, 0x1F,  0x0E,  0x1F,  0x1F,  0x0E,  0x1F,  0x0A]
   ]
         lcd.lcd_load_custom_chars(font_data)
-        lcd.lcd_display_string(chr(1)+" "+time_str+"  "+chr(0)+temp_str+chr(2),1)
-        
-        lcd.lcd_display_string(chr(3)+" "+str(cpu_load)+"% ",2)
-  
+        lcd.lcd_display_string(chr(1)+time_str+"   "+chr(0)+temp_str+chr(2),1)
+
+        ## format cpu load
+        cpu_load_str=""
+        if cpu_load:
+            for cpu in cpu_load:
+                cpu_load_str += '%0*d%% ' % (2,cpu)
+            lcd.lcd_display_string(chr(3)+cpu_load_str,2)
+      
 def do_exit():
     lcd.lcd_clear()
     lcd.backlight(0)
@@ -108,7 +119,7 @@ print("signal set")
 lcd.lcd_clear()
 wait_time_sync()
 cpu = cpuload.CpuLoad()
-Relay().switch(False)
+#Relay().switch(True)
 
 lcd.lcd_clear()
 show_system_status()
