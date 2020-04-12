@@ -1,0 +1,5 @@
+*.cpp.orig
+*.h.orig
+a.out
+a.out.origin
+
