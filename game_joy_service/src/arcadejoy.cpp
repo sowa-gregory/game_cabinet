@@ -2,10 +2,15 @@
 #include <string>
 #include "inputdevice.h"
 #include "usergroups.h"
+#include "joyproxy.h"
+#include "colormod.h"
 
 using namespace std;
 
 #define INPUT_GROUP "input"
+
+Color::Modifier blue(Color::FG_BLUE);
+Color::Modifier def(Color::FG_DEFAULT);
 
 void joy() {
 
@@ -17,9 +22,15 @@ void joy() {
     }
     InputDevice input_device;
 
-    auto devices = input_device.ScanDevices();
+  	input_device.ScanDevices();
+	cout <<  "Detecting input devices..." << endl << blue;
     input_device.PrintDevices();
-    cout << input_device.GetDeviceByName( "Sleep Button") << endl;
+
+
+	cout << def << "Looking for DragonRise joysticks..." << endl;
+    vector<string> devices = input_device.GetDevicesByName( "DragonRise");
+    
+	auto joy_proxy = JoyProxy(devices);    
 
 }
 int main(void) {

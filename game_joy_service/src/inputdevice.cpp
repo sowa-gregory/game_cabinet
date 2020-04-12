@@ -23,6 +23,7 @@ vector<InputDeviceList> InputDevice::ScanDevices(void) {
     devices_.clear();
     for( int i=0; i<num; i++) {
         char name[256];
+        name[0]=0;
         auto path = string(INPUT_DEV_PATH)+"/"+name_list[i]->d_name;
         auto fd = open(path.c_str(), O_RDONLY);
 
@@ -30,7 +31,7 @@ vector<InputDeviceList> InputDevice::ScanDevices(void) {
             InputDevice::FreeRes(num, name_list);
             throw "cannot open device:" +path;
         }
-        ioctl(fd, EVIOCGNAME(sizeof(name)), name);
+        int ret = ioctl(fd, EVIOCGNAME(sizeof(name)), name);
         close(fd);
         devices_.push_back(InputDeviceList{path, name});
     }
@@ -43,9 +44,17 @@ void InputDevice::PrintDevices() const {
         cout << dev.device_path << " " << dev.device_name << endl;
 }
 
-string InputDevice::GetDeviceByName(const string &name) const {
+vector<string> InputDevice::GetDevicesByName( const string &name ) const
+{
+	vector<string> match_devs;
     for( auto &dev : devices_)
-        if( dev.device_name.compare(name)==0) return dev.device_path;
-    throw "get_device_by_name:\"" + name + "\" not found";
+        if( dev.device_name.find(name)!=string::npos) match_devs.push_back(dev.device_path);
+	return match_devs;
+}
+
+string InputDevice::GetSingleDeviceByName(const string &name) const {
+    for( auto &dev : devices_)
+        if( dev.device_name.find(name)!=string::npos) return dev.device_path;
+    throw "GetSingleDeviceByName:\"" + name + "\" not found";
 }
 
