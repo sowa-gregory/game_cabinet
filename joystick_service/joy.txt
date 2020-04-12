@@ -1,0 +1,8 @@
+# access to joystick configuration
+
+cd ~RetroPie-Setup
+sudo ./retropie_setup.sh
+
+Configuration / tools --> 805 configedit --> 1 Configure basic libretro
+emulator options --> 1 Configure default options for all libretro emulators
+--> 7 Choose youpad order
