@@ -7,6 +7,7 @@
 #include "joyproxy.h"
 #include "colormod.h"
 #include "process.h"
+#include "fifo.h"
 
 using namespace std;
 
@@ -35,14 +36,24 @@ void joy() {
     auto joy_proxy = JoyProxy(devices);
     joy_proxy.start();
 }
+
+
+void fifotest()
+{
+  Fifo fifo("/tmp/fif");
+  cout << "adfs" << endl;
+  while(true)
+  {
+    if( auto out = fifo.ReadLine() )
+    cout << *out << endl;
+  }
+}
+
 int main(void) {
-	
+	fifotest();
 	
     try {
-	for(int i=0;i<1000;i++)	
-	{cout << Process::FindById(3631) << endl;
-	this_thread::sleep_for(chrono::milliseconds(500));
-	}
+
 	exit(-1);
         joy();
     } catch( string  exc ) {
