@@ -37,9 +37,12 @@ void JoyProxy::OpenInputDevs(vector<string> input_devs) {
     }
 }
 
+void JoyProxy::OnButtonEvent(const int joy_id, const input_event& ev) const
+{
+	cout << joy_id << " " << ev.code << " " << ev.value << endl;
+}
 
-
-void JoyProxy::start() {
+void JoyProxy::Start() const {
     fd_set set;
     input_event ev;
     timeval timeout;
@@ -74,11 +77,14 @@ void JoyProxy::start() {
         }
 
         // read selected fd's
-        for( int i=0; i<input_fd_len_; i++) {
-            current_fd = input_fd_[i];
+        for( int joy_id=0; joy_id<input_fd_len_; joy_id++) {
+            current_fd = input_fd_[joy_id];
             if(FD_ISSET(current_fd, &set)) {
                 size = read(current_fd, &ev, sizeof(input_event));
+
+                if(ev.type == EV_KEY ) OnButtonEvent(joy_id, ev);
                 //cout << current_fd << " :  " << counter++ << " " << ev.time.tv_sec << " " << ev.type << " " << ev.code << " " << ev.value << endl;
+                //if(ev.type == EV_SYN) cout << "syn" << endl;
             }
         }
     }

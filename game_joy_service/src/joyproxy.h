@@ -6,6 +6,8 @@
 
 using namespace std;
 
+struct input_event;
+
 class JoyProxy {
 
   private:
@@ -16,5 +18,6 @@ class JoyProxy {
   public:
     JoyProxy(vector<string> input_devs);
     ~JoyProxy();
-    void start();
+    void Start() const;
+	void OnButtonEvent(const int joy_id, const input_event& ev) const;
 };

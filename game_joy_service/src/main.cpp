@@ -31,7 +31,7 @@ void joy() {
     vector<string> devices = input_device.GetDevicesByName( "DragonRise");
 
     auto joy_proxy = JoyProxy(devices);
-    joy_proxy.start();
+    joy_proxy.Start();
 }
 int main(void) {
     try {
