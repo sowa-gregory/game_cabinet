@@ -1,0 +1,1 @@
+Scripts runcommand-on{start|end} are run automatically by emulation station on start and end of game respectively.
