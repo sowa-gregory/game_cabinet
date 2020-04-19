@@ -2,7 +2,6 @@ package cpuinfo
 
 import (
 	"bufio"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -14,7 +13,7 @@ import (
 const (
 	statPath = "/proc/stat"
 	// DefaultFreq - default frequency of cpu statistics collection
-	DefaultFreq = 2
+	defaultTimeSpan = 2
 )
 
 type cpuInfo struct {
@@ -67,17 +66,20 @@ func getCPUInfo() ([]cpuInfo, error) {
 	return cpuInfoArr, nil
 }
 
-func loadRoutine(channel chan map[string]uint, frequency int) {
+func loadRoutine(channel chan LoadResult) {
 	startInfo, err := getCPUInfo()
 	if err != nil {
+		channel <- LoadResult{nil, err}
 		log.Print("cpuload ", err)
 		return
 	}
 
-	time.Sleep(time.Duration(frequency) * time.Second)
+	time.Sleep(time.Duration(defaultTimeSpan) * time.Second)
 
 	endInfo, err := getCPUInfo()
 	if err != nil {
+		channel <- LoadResult{nil, err}
+
 		log.Print("cpuload ", err)
 		return
 	}
@@ -89,18 +91,36 @@ func loadRoutine(channel chan map[string]uint, frequency int) {
 		cpuPercentage := (uint)(100 * (total - idle) / total)
 		load[startInfo[index].cpuID] = cpuPercentage
 	}
-	channel <- load
+	channel <- LoadResult{load, nil}
+}
+
+type LoadResult struct {
+	Load map[string]uint
+	Err  error
 }
 
 // StartLoadMeasure - starts collection of cpu statistics, which are send to channel in background
-func GetLoad(timeSpan int) chan map[string]uint {
-	channel := make(chan map[string]uint)
-	go loadRoutine(channel, timeSpan)
+func GetLoad() chan LoadResult {
+	channel := make(chan LoadResult)
+	go loadRoutine(channel)
 	return channel
 }
 
-func GetTemp() uint {
-	content, _ := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
-	fmt.Println(content)
-	return 1
+func GetTemperature() chan uint {
+
+	channel := make(chan uint)
+
+	go func() {
+		content, err := ioutil.ReadFile("/tmp/a")
+		if err != nil {
+			log.Panicln("GetTemperature", err)
+		}
+		str := strings.ReplaceAll(string(content), "\n", "")
+		temp, err := strconv.ParseUint(str, 10, 32)
+		if err != nil {
+			log.Panicln("GetTemperature parsing value", err)
+		}
+		channel <- uint(temp / 1000)
+	}()
+	return channel
 }
