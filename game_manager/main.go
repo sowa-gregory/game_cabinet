@@ -2,19 +2,39 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"time"
 
+	"github.com/sowa-gregory/game_cabinet/game_manager/asyncpiperdr"
 	"github.com/sowa-gregory/game_cabinet/game_manager/cpuinfo"
-	"github.com/sowa-gregory/game_cabinet/game_manager/gamelogger"
 )
 
-func dbtest() {
-	gamelogger.Test()
+func Test() {
+	rdr := asyncpiperdr.New()
+
+	_ = rdr.Read("/tmp/test")
+
+	//write()
+	to := time.After(5 * time.Second)
+
+	for {
+		select {
+		//	case a := <-channel:
+		//	fmt.Println(a)
+		case <-to:
+			fmt.Println("@@@@")
+			rdr.Stop()
+			time.Sleep(5 * time.Second)
+			return
+		}
+	}
+
 }
 
 func main() {
-	dbtest()
+	Test()
+	os.Exit(1)
 	c := cpuinfo.GetLoad()
 
 	d := time.After(2 * time.Second)
