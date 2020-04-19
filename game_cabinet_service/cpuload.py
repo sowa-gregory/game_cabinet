@@ -51,12 +51,16 @@ class CpuLoad(threading.Thread):
                 cpu_line = [cpu_line[0]]+[float(i) for i in cpu_line[1:]]#type casting
                 cpu_id,user,nice,system,idle,iowait,irq,softrig,steal,guest,guest_nice = cpu_line
 
+                print("!!!", cpu_id, user, nice, system, idle, iowait, irq, softrig, steal, guest)
+                
+
                 Idle=idle+iowait
                 NonIdle=user+nice+system+irq+softrig+steal
 
                 Total=Idle+NonIdle
                 #update dictionionary
                 cpu_infos.update({cpu_id:{'total':Total,'idle':Idle}})
+                print(cpu_infos)
             return cpu_infos
     
     def timewait(self,secs:int):

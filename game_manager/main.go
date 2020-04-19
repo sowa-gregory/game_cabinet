@@ -2,12 +2,23 @@ package main
 
 import (
 	"fmt"
+	"time"
 
-	"github.com/sowa-gregory/game_cabinet/game_manager/cpuload"
+	"github.com/sowa-gregory/game_cabinet/game_manager/cpustats"
 )
 
 func main() {
-	cpuload.GetCPULoad()
 
-	fmt.Println("start")
+	cpu := cpustats.GetInstance()
+
+	c := cpu.StartLoadMeasure(cpustats.DefaultFreq)
+	cpu.StopLoadMeasure()
+
+	time.Sleep(2 * time.Second)
+	c = cpu.StartLoadMeasure(cpustats.DefaultFreq)
+	for i := 0; i < 3; i++ {
+		load, err := <-c
+		fmt.Println(i, load, err)
+	}
+	cpu.StopLoadMeasure()
 }
