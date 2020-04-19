@@ -4,21 +4,26 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sowa-gregory/game_cabinet/game_manager/cpustats"
+	"github.com/sowa-gregory/game_cabinet/game_manager/cpuinfo"
 )
 
 func main() {
 
-	cpu := cpustats.GetInstance()
+	c := cpuinfo.GetLoad(2)
 
-	c := cpu.StartLoadMeasure(cpustats.DefaultFreq)
-	cpu.StopLoadMeasure()
+	d := time.After(2 * time.Second)
 
-	time.Sleep(2 * time.Second)
-	c = cpu.StartLoadMeasure(cpustats.DefaultFreq)
-	for i := 0; i < 3; i++ {
-		load, err := <-c
-		fmt.Println(i, load, err)
+	a := cpuinfo.GetTemp()
+	print(a)
+	for {
+		select {
+		case load := <-c:
+			fmt.Println(load)
+			c = cpuinfo.GetLoad(2)
+
+		case <-d:
+			fmt.Println("timer")
+			d = time.After(5 * time.Second)
+		}
 	}
-	cpu.StopLoadMeasure()
 }
