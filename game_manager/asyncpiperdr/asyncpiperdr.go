@@ -18,6 +18,7 @@ type asyncPipeRdr struct {
 	stopped     atomicbool.AtomicBool
 }
 
+// New - creates instance of asyncPipeRdr
 func New() *asyncPipeRdr {
 	var instance asyncPipeRdr
 	instance.stopChannel = make(chan bool, 1) // must have length 1 to buffer write otherwise write to stopchannel may block
@@ -25,7 +26,7 @@ func New() *asyncPipeRdr {
 	return &instance
 }
 
-func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) bool {
+func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) (continuation bool) {
 	file, err := os.OpenFile(pipe, os.O_RDWR, 0)
 	defer file.Close()
 	if err != nil {
@@ -43,25 +44,23 @@ func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) bo
 			// just timeout
 			select {
 			case <-stopChannel:
-				return true
+				return false
 			default:
 			}
-			fmt.Println("timeout")
-
 			continue
 		}
 		if err == io.EOF {
-			return false
+			return true
 		}
 		if err != nil {
 			log.Println(err)
-			return false
+			return true
 		}
 		if by == '\n' {
 			select {
 			case channel <- string(buffer):
 			case <-stopChannel:
-				return true
+				return false
 			}
 			buffer = nil
 		} else {
@@ -72,19 +71,23 @@ func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) bo
 
 func (asyncPipeRdrObj *asyncPipeRdr) Stop() {
 	if asyncPipeRdrObj.stopped.SwapIfFalse() {
-
 		asyncPipeRdrObj.wait.Add(1)
 		asyncPipeRdrObj.stopChannel <- true
 		asyncPipeRdrObj.wait.Wait()
 	} else {
 		log.Panicln("AsyncPipeRdr already stopped")
 	}
+}
 
+func (asyncPipeRdrObj *asyncPipeRdr) IsPipeExists(pipe string) bool {
+	if fileInfo, err := os.Stat(pipe); err == nil && fileInfo.Mode()&os.ModeNamedPipe >= 0 {
+		return true
+	}
+	return false
 }
 
 func (asyncPipeRdrObj *asyncPipeRdr) Read(pipe string) <-chan string {
 	fileInfo, err := os.Stat(pipe)
-
 	if err == nil {
 		if fileInfo.Mode()&os.ModeNamedPipe == 0 {
 			log.Panicf("AsyncPipeRdr path: %s is not a named pipe\n", pipe)
@@ -96,7 +99,7 @@ func (asyncPipeRdrObj *asyncPipeRdr) Read(pipe string) <-chan string {
 	ch := make(chan string)
 	go func() {
 		defer fmt.Println("exit routing")
-		for processRead(pipe, ch, asyncPipeRdrObj.stopChannel) == false {
+		for processRead(pipe, ch, asyncPipeRdrObj.stopChannel) {
 		}
 		close(ch)
 		asyncPipeRdrObj.wait.Done()

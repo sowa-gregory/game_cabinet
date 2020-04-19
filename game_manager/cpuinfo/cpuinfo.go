@@ -100,13 +100,13 @@ type LoadResult struct {
 }
 
 // StartLoadMeasure - starts collection of cpu statistics, which are send to channel in background
-func GetLoad() chan LoadResult {
+func GetLoad() <-chan LoadResult {
 	channel := make(chan LoadResult)
 	go loadRoutine(channel)
 	return channel
 }
 
-func GetTemperature() chan uint {
+func GetTemperature() <-chan uint {
 
 	channel := make(chan uint)
 

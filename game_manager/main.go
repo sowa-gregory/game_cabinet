@@ -13,21 +13,10 @@ import (
 func Test() {
 	rdr := asyncpiperdr.New()
 
-	_ = rdr.Read("/tmp/test")
+	c := rdr.Read("/tmp/test")
 
-	//write()
-	to := time.After(5 * time.Second)
-
-	for {
-		select {
-		//	case a := <-channel:
-		//	fmt.Println(a)
-		case <-to:
-			fmt.Println("@@@@")
-			rdr.Stop()
-			time.Sleep(5 * time.Second)
-			return
-		}
+	for j := range c {
+		fmt.Println(j)
 	}
 
 }
