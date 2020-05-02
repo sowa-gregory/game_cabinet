@@ -13,20 +13,20 @@ import (
 )
 
 type asyncPipeRdr struct {
-	stopChannel chan bool
-	wait        *sync.WaitGroup
-	stopped     atomicbool.AtomicBool
+	channel chan string
+	wait    *sync.WaitGroup
+	stopped atomicbool.AtomicBool
 }
 
 // New - creates instance of asyncPipeRdr
 func New() *asyncPipeRdr {
 	var instance asyncPipeRdr
-	instance.stopChannel = make(chan bool, 1) // must have length 1 to buffer write otherwise write to stopchannel may block
+	instance.channel = make(chan string, 1) // must have length 1 to buffer write otherwise write to stopchannel may block
 	instance.wait = &sync.WaitGroup{}
 	return &instance
 }
 
-func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) (continuation bool) {
+func processRead(pipe string, channel chan string) (continuation bool) {
 	file, err := os.OpenFile(pipe, os.O_RDWR, 0)
 	defer file.Close()
 	if err != nil {
@@ -43,7 +43,7 @@ func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) (c
 		if _, ok := err.(*os.PathError); ok {
 			// just timeout
 			select {
-			case <-stopChannel:
+			case <-channel:
 				return false
 			default:
 			}
@@ -59,7 +59,7 @@ func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) (c
 		if by == '\n' {
 			select {
 			case channel <- string(buffer):
-			case <-stopChannel:
+			case <-channel:
 				return false
 			}
 			buffer = nil
@@ -72,7 +72,7 @@ func processRead(pipe string, channel chan<- string, stopChannel <-chan bool) (c
 func (asyncPipeRdrObj *asyncPipeRdr) Stop() {
 	if asyncPipeRdrObj.stopped.SwapIfFalse() {
 		asyncPipeRdrObj.wait.Add(1)
-		asyncPipeRdrObj.stopChannel <- true
+		asyncPipeRdrObj.channel <- "stop"
 		asyncPipeRdrObj.wait.Wait()
 	} else {
 		log.Panicln("AsyncPipeRdr already stopped")
@@ -96,13 +96,12 @@ func (asyncPipeRdrObj *asyncPipeRdr) Read(pipe string) <-chan string {
 		log.Panicf("AsyncPipeRdr path: %s doesn't exist\n", pipe)
 	}
 
-	ch := make(chan string)
 	go func() {
 		defer fmt.Println("exit routing")
-		for processRead(pipe, ch, asyncPipeRdrObj.stopChannel) {
+		for processRead(pipe, asyncPipeRdrObj.channel) {
 		}
-		close(ch)
+		close(asyncPipeRdrObj.channel)
 		asyncPipeRdrObj.wait.Done()
 	}()
-	return ch
+	return asyncPipeRdrObj.channel
 }
