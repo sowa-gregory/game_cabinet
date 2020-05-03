@@ -13,20 +13,24 @@ import (
 )
 
 type asyncPipeRdr struct {
+	// channel to send lines to consumers
 	channel chan string
-	wait    *sync.WaitGroup
-	stopped atomicbool.AtomicBool
+	// internal channel to indicate end of processing
+	stopChannel chan bool
+	wait        *sync.WaitGroup
+	stopped     atomicbool.AtomicBool
 }
 
 // New - creates instance of asyncPipeRdr
 func New() *asyncPipeRdr {
 	var instance asyncPipeRdr
-	instance.channel = make(chan string, 1) // must have length 1 to buffer write otherwise write to stopchannel may block
-	instance.wait = &sync.WaitGroup{}
+	instance.channel = make(chan string)
+	instance.stopChannel = make(chan bool, 1) // must have length 1 to buffer write otherwise write to stopchannel may block
+	instance.wait = nil
 	return &instance
 }
 
-func processRead(pipe string, channel chan string) (continuation bool) {
+func processRead(pipe string, channel chan<- string, stpChan <-chan bool) (continuation bool) {
 	file, err := os.OpenFile(pipe, os.O_RDWR, 0)
 	defer file.Close()
 	if err != nil {
@@ -43,7 +47,7 @@ func processRead(pipe string, channel chan string) (continuation bool) {
 		if _, ok := err.(*os.PathError); ok {
 			// just timeout
 			select {
-			case <-channel:
+			case <-stpChan:
 				return false
 			default:
 			}
@@ -56,10 +60,18 @@ func processRead(pipe string, channel chan string) (continuation bool) {
 			log.Println(err)
 			return true
 		}
+
+		// allows for exit at reception of any byte from pipe
+		select {
+		case <-stpChan:
+			return false
+		default:
+		}
+
 		if by == '\n' {
 			select {
 			case channel <- string(buffer):
-			case <-channel:
+			case <-stpChan:
 				return false
 			}
 			buffer = nil
@@ -69,36 +81,36 @@ func processRead(pipe string, channel chan string) (continuation bool) {
 	}
 }
 
-func (asyncPipeRdrObj *asyncPipeRdr) Stop() {
+func (asyncPipeRdrObj *asyncPipeRdr) Stop(waitGrp *sync.WaitGroup) {
 	if asyncPipeRdrObj.stopped.SwapIfFalse() {
+		asyncPipeRdrObj.wait = waitGrp
 		asyncPipeRdrObj.wait.Add(1)
-		asyncPipeRdrObj.channel <- "stop"
-		asyncPipeRdrObj.wait.Wait()
+		asyncPipeRdrObj.stopChannel <- true
 	} else {
 		log.Panicln("AsyncPipeRdr already stopped")
 	}
 }
 
-func (asyncPipeRdrObj *asyncPipeRdr) IsPipeExists(pipe string) bool {
+func (asyncPipeRdrObj *asyncPipeRdr) PipeExists(pipe string) bool {
 	if fileInfo, err := os.Stat(pipe); err == nil && fileInfo.Mode()&os.ModeNamedPipe >= 0 {
 		return true
 	}
 	return false
 }
 
-func (asyncPipeRdrObj *asyncPipeRdr) Read(pipe string) <-chan string {
-	fileInfo, err := os.Stat(pipe)
+func (asyncPipeRdrObj *asyncPipeRdr) StartReading(pipeName string) <-chan string {
+	fileInfo, err := os.Stat(pipeName)
 	if err == nil {
 		if fileInfo.Mode()&os.ModeNamedPipe == 0 {
-			log.Panicf("AsyncPipeRdr path: %s is not a named pipe\n", pipe)
+			log.Panicf("AsyncPipeRdr path: %s is not a named pipe\n", pipeName)
 		}
 	} else {
-		log.Panicf("AsyncPipeRdr path: %s doesn't exist\n", pipe)
+		log.Panicf("AsyncPipeRdr path: %s doesn't exist\n", pipeName)
 	}
 
 	go func() {
 		defer fmt.Println("exit routing")
-		for processRead(pipe, asyncPipeRdrObj.channel) {
+		for processRead(pipeName, asyncPipeRdrObj.channel, asyncPipeRdrObj.stopChannel) {
 		}
 		close(asyncPipeRdrObj.channel)
 		asyncPipeRdrObj.wait.Done()

@@ -4,24 +4,36 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sync"
 	"time"
 
 	"github.com/sowa-gregory/game_cabinet/game_manager/asyncpiperdr"
 	"github.com/sowa-gregory/game_cabinet/game_manager/cpuinfo"
+	"github.com/sowa-gregory/game_cabinet/game_manager/gamestatsdb"
 )
+
+func dbtest() {
+	gamestatsdb.Test()
+}
 
 func Test() {
 	rdr := asyncpiperdr.New()
 
-	c := rdr.Read("/tmp/test")
+	c := rdr.StartReading("/tmp/test")
+	db := gamestatsdb.New(c)
+	db.StartProcessing()
 
-	for j := range c {
-		fmt.Println(j)
-	}
+	var waitg sync.WaitGroup
 
+	time.Sleep(time.Second * 1)
+	db.Stop(&waitg)
+	rdr.Stop(&waitg)
+
+	waitg.Wait()
 }
 
 func main() {
+	//dbtest()
 	Test()
 	os.Exit(1)
 	c := cpuinfo.GetLoad()
