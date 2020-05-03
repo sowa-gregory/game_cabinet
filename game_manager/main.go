@@ -12,10 +12,6 @@ import (
 	"github.com/sowa-gregory/game_cabinet/game_manager/gamestatsdb"
 )
 
-func dbtest() {
-	gamestatsdb.Test()
-}
-
 func Test() {
 	rdr := asyncpiperdr.New()
 
@@ -25,7 +21,7 @@ func Test() {
 
 	var waitg sync.WaitGroup
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 300)
 	db.Stop(&waitg)
 	rdr.Stop(&waitg)
 

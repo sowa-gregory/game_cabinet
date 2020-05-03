@@ -2,7 +2,6 @@ package asyncpiperdr
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -101,11 +100,10 @@ func (asyncPipeRdrObj *asyncPipeRdr) StartReading(pipeName string) <-chan string
 	}
 
 	go func() {
-		defer fmt.Println("exit routing")
+		defer asyncPipeRdrObj.rtnStop.Done()
 		for asyncPipeRdrObj.processRead(pipeName) {
 		}
 		close(asyncPipeRdrObj.channel)
-		asyncPipeRdrObj.rtnStop.Done()
 	}()
 	return asyncPipeRdrObj.channel
 }
