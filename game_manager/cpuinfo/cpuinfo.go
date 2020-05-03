@@ -101,16 +101,18 @@ type LoadResult struct {
 }
 
 // StartLoadMeasure - starts collection of cpu statistics, which are send to channel in background
-func GetLoad() chan LoadResult {
+func GetLoad() <-chan LoadResult {
 	channel := make(chan LoadResult)
 	go loadRoutine(channel)
 	return channel
 }
 
-func GetTemperature() uint {
+func GetTemperature() <-chan uint {
 
+	channel := make(chan uint)
 
-		content, err := ioutil.ReadFile(tempPath)
+	go func() {
+		content, err := ioutil.ReadFile("/tmp/a")
 		if err != nil {
 			log.Panicln("GetTemperature", err)
 		}
@@ -119,6 +121,7 @@ func GetTemperature() uint {
 		if err != nil {
 			log.Panicln("GetTemperature parsing value", err)
 		}
-		return  uint(temp / 1000)
-	
+		channel <- uint(temp / 1000)
+	}()
+	return channel
 }

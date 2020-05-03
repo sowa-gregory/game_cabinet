@@ -1,3 +1,5 @@
 #!/bin/sh
 
-echo START $1 \"`basename "$3"`\" >> /tmp/start
+rom="\"`basename $3`\""
+line="START $1 $rom"
+timeout 1 bash -c "echo $line > /tmp/test"
