@@ -29,24 +29,24 @@ func New(dataChannel <-chan string) *gameStatDB {
 	return &instance
 }
 
-func (gameStatDBObj *gameStatDB) processData() {
-	var data string
-	for {
-		select {
-		case data = <-gameStatDBObj.dataChannel:
-			fmt.Println("stat:", data)
-		case <-gameStatDBObj.rtnStop.StopChannel:
-			return
-		}
-	}
+func (gameStatDBObj *gameStatDB) processData(data string) {
+
 }
 
 func (gameStatDBObj *gameStatDB) StartProcessing() {
 	go func() {
 		defer fmt.Println("exit db")
-		gameStatDBObj.processData()
-		gameStatDBObj.rtnStop.Done()
-
+		for {
+			var data string
+			select {
+			case data = <-gameStatDBObj.dataChannel:
+				fmt.Println("stat:", data)
+				gameStatDBObj.processData(data)
+			case <-gameStatDBObj.rtnStop.GetStopChannel():
+				gameStatDBObj.rtnStop.Done()
+				return
+			}
+		}
 	}()
 }
 

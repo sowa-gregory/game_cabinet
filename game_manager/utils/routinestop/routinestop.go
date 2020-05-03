@@ -9,12 +9,12 @@ import (
 type RoutineStop struct {
 	stopped     atomicbool.AtomicBool
 	wait        *sync.WaitGroup
-	StopChannel chan bool
+	stopChannel chan bool
 }
 
 func New() *RoutineStop {
 	instance := RoutineStop{}
-	instance.StopChannel = make(chan bool, 1)
+	instance.stopChannel = make(chan bool, 1)
 	return &instance
 }
 
@@ -22,10 +22,14 @@ func (routineStopObj *RoutineStop) RequestStop(waitGrp *sync.WaitGroup) bool {
 	if routineStopObj.stopped.SwapIfFalse() {
 		routineStopObj.wait = waitGrp
 		routineStopObj.wait.Add(1)
-		routineStopObj.StopChannel <- true
+		routineStopObj.stopChannel <- true
 		return true
 	}
 	return false
+}
+
+func (routineStopObj *RoutineStop) GetStopChannel() <-chan bool {
+	return routineStopObj.stopChannel
 }
 
 func (routineStopObj *RoutineStop) Done() {

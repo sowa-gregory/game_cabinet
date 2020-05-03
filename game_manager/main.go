@@ -25,7 +25,7 @@ func Test() {
 
 	var waitg sync.WaitGroup
 
-	time.Sleep(time.Second * 1)
+	time.Sleep(time.Second * 10)
 	db.Stop(&waitg)
 	rdr.Stop(&waitg)
 
