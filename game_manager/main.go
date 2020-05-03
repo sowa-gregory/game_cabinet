@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 	"time"
 
 	"github.com/sowa-gregory/game_cabinet/game_manager/cpuinfo"
@@ -9,17 +10,18 @@ import (
 
 func main() {
 
-	c := cpuinfo.GetLoad(2)
+	c := cpuinfo.GetLoad()
 
 	d := time.After(2 * time.Second)
-
-	a := cpuinfo.GetTemp()
-	print(a)
+	e := cpuinfo.GetTemperature()
+	print(e)
 	for {
+		fmt.Println("gp", runtime.NumGoroutine())
 		select {
+	
 		case load := <-c:
 			fmt.Println(load)
-			c = cpuinfo.GetLoad(2)
+			c = cpuinfo.GetLoad()
 
 		case <-d:
 			fmt.Println("timer")
