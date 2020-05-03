@@ -117,7 +117,7 @@ print("signal set")
 
 # wait for timed synchronization
 lcd.lcd_clear()
-wait_time_sync()
+#wait_time_sync()
 cpu = cpuload.CpuLoad()
 Relay().switch(True)
 

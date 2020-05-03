@@ -12,6 +12,7 @@ import (
 
 const (
 	statPath = "/proc/stat"
+	tempPath = "/sys/class/thermal/thermal_zone0/temp"
 	// DefaultFreq - default frequency of cpu statistics collection
 	defaultTimeSpan = 2
 )

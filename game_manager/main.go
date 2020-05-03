@@ -36,20 +36,6 @@ func main() {
 
 	d := time.After(2 * time.Second)
 	e := cpuinfo.GetTemperature()
+	
 
-	for {
-		fmt.Println("gp", runtime.NumGoroutine())
-		select {
-		case temp := <-e:
-			fmt.Println(temp)
-
-		case load := <-c:
-			fmt.Println(load)
-			c = cpuinfo.GetLoad()
-
-		case <-d:
-			fmt.Println("timer")
-			d = time.After(5 * time.Second)
-		}
-	}
 }
