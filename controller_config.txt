@@ -1,0 +1,23 @@
+D-PAD  - joystick
+START - player one
+SELECT - coin
+
+A ___
+  _#_
+
+B ___
+  #__
+
+X _#_
+  ___
+
+Y #__
+  ___
+
+L __#
+  ___
+
+R ___
+  __#
+
+HOTKEY start 
