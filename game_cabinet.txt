@@ -1,5 +1,21 @@
 Game cabinet is a service to control following devices connected to retropie
 raspberry distribution.
+LCD
+2 [5V] black
+6 [GND] white
+3 [GPIO2-SDA] green
+5 [GPIO3-SCL] yellow
+
+Relay
+4 [5V] black
+9 [GND] white
+7 [GPIO4] orange
+
+LED PWM
+17 [3v3] 
+34 [GND]
+33 [GPIO13-PWM1]
+ 
 
 monitor: power on/off
 audio amplifier: power on/off
